@@ -37,13 +37,25 @@ if(isset($_GET['id']) && (int)$_GET['id'] > 0){#proper data must be on querystri
 	myRedirect(VIRTUAL_PATH . "surveys/survey_list.php");
 }
 
-$mySurvey = new Survey($myID);
-if($mySurvey->isValid)
-{
-	$config->titleTag = "'" . $mySurvey->Title . "' Survey!";
-}else{
-	$config->titleTag = smartTitle(); //use constant 
+
+
+$myResult = new Result($myID);
+if($myResult->isValid)
+{//if there is a result show it
+	$PageTitle = "'Result to " . $myResult->Title . "' Survey!";
+}else{//no result, show survey
+	$mySurvey = new Survey($myID);
+	if($mySurvey->isValid)
+	{
+		$config->titleTag = "'" . $mySurvey->Title . "' Survey!";
+	}else{//no survey show warning
+		$config->titleTag = smartTitle(); //use constant 
+	}
+	
+	$PageTitle = THIS_PAGE; #use constant 
 }
+$config->titleTag = $PageTitle;
+
 #END CONFIG AREA ---------------------------------------------------------- 
 
 get_header(); #defaults to theme header or header_inc.php
@@ -52,15 +64,26 @@ get_header(); #defaults to theme header or header_inc.php
 
 <?php
 
-if($mySurvey->isValid)
-{ #check to see if we have a valid SurveyID
-	echo $mySurvey->SurveyID . "<br />";
-	echo $mySurvey->Title . "<br />";
-	echo $mySurvey->Description . "<br />";
-	$mySurvey->showQuestions();
+
+
+if($myResult->isValid)
+{# check to see if we have a valid SurveyID
+	echo "Survey Title: <b>" . $myResult->Title . "</b><br />";  //show data on page
+	echo "Survey Description: " . $myResult->Description . "<br />";
+	$myResult->showGraph() . "<br />";	//showTallies method shows all questions, answers and tally totals!
 	responseList($myID);
+	unset($myResult);  //destroy object & release resources
 }else{
-	echo "Sorry, no such survey!";	
+	if($mySurvey->isValid)
+	{ #check to see if we have a valid SurveyID
+		echo $mySurvey->SurveyID . "<br />";
+		echo $mySurvey->Title . "<br />";
+		echo $mySurvey->Description . "<br />";
+		$mySurvey->showQuestions();
+		echo "No results so far.";
+	}else{
+		echo "Sorry, no such survey!";	
+	}
 }
 
 get_footer(); #defaults to theme footer or footer_inc.php
